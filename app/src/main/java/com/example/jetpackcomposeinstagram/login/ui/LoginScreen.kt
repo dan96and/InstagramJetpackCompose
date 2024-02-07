@@ -1,7 +1,6 @@
-package com.example.jetpackcomposeinstagram
+package com.example.jetpackcomposeinstagram.login.ui
 
 import android.app.Activity
-import android.util.Patterns
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -32,6 +31,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -46,9 +46,10 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.jetpackcomposeinstagram.R
 
 @Composable
-fun LoginScreen() {
+fun LoginScreen(loginViewModel: LoginViewModel) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -58,7 +59,7 @@ fun LoginScreen() {
             modifier = Modifier
                 .align(Alignment.TopEnd)
         )
-        Body(modifier = Modifier.align(Alignment.Center))
+        Body(modifier = Modifier.align(Alignment.Center), loginViewModel)
         Footer(modifier = Modifier.align(Alignment.BottomCenter))
     }
 }
@@ -74,22 +75,20 @@ fun Header(modifier: Modifier) {
 }
 
 @Composable
-fun Body(modifier: Modifier) {
-    var email: String by remember { mutableStateOf("") }
-    var password: String by remember { mutableStateOf("") }
-    var isLoginEnable: Boolean by remember { mutableStateOf(false) }
+fun Body(modifier: Modifier, loginViewModel: LoginViewModel) {
+    val email: String by loginViewModel.email.observeAsState(initial = "")
+    val password: String by loginViewModel.password.observeAsState(initial = "")
+    val isLoginEnable: Boolean by loginViewModel.isEnable.observeAsState(false)
 
     Column(modifier = modifier) {
         ImageLogo(modifier = Modifier.align(Alignment.CenterHorizontally))
         Spacer(modifier = Modifier.size(16.dp))
         EditTextEmail(email = email) {
-            email = it
-            isLoginEnable = enableButtonLogin(email, password)
+            loginViewModel.onLoginChanged(it, password)
         }
         Spacer(modifier = Modifier.size(8.dp))
         EditTextPassword(password = password) {
-            password = it
-            isLoginEnable = enableButtonLogin(email, password)
+            loginViewModel.onLoginChanged(email, it)
         }
         ForgotPassword(
             modifier = Modifier
@@ -147,10 +146,6 @@ fun EditTextEmail(email: String, onTextChanged: (String) -> Unit) {
             focusedIndicatorColor = Color.Transparent
         )
     )
-}
-
-fun enableButtonLogin(email: String, password: String): Boolean {
-    return Patterns.EMAIL_ADDRESS.matcher(email).matches() && password.length > 6
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
